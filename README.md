@@ -68,7 +68,7 @@ CybermaxTaskManager/
 
 1.  **Clone the repository (if you haven't already):**
     ```sh
-    git clone <repository-url>
+    git clone https://github.com/wandewana/CybermaxTaskManager.git
     cd CybermaxTaskManager
     ```
 
