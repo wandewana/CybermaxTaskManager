@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from app.db.base import Base
 from app.models.user import User  # noqa
+from app.models.task import Task  # noqa
 
 # add your model's MetaData object here
 # for 'autogenerate' support
