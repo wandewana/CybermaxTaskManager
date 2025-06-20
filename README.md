@@ -101,6 +101,43 @@ python -m app.workers.reminder
 This script will run continuously, checking for overdue tasks every 30 seconds and logging reminders.
 
 
+## Testing
+
+This project uses `pytest` for testing and features a fully automated test suite that ensures reliability without affecting your development data.
+
+### How to Run Tests
+
+To run the entire test suite, simply execute the following command from the project root:
+
+```sh
+pytest
+```
+
+### Automated Test Database
+
+The test suite is configured to use a **separate, temporary PostgreSQL database** named `test_taskdb`. This provides a realistic testing environment that mirrors production.
+
+**Key Features:**
+- **Automatic Creation & Destruction**: You do **not** need to create the test database manually. The test suite automatically creates `test_taskdb` when it starts and completely destroys it when it finishes.
+- **Data Isolation**: Your main development database (`taskdb`) is **never touched** by the test suite, ensuring your data remains safe.
+
+### Core Fixtures (`tests/conftest.py`)
+
+The testing framework is built around a set of powerful fixtures that handle setup and teardown automatically:
+
+- `setup_database`: Manages the entire lifecycle of the test database.
+- `db_session`: Provides a clean, transactional database session for each test function.
+- `async_client`: An HTTP client for making API requests to the application during tests.
+- `test_user`: Creates a sample user in the test database for use in tests.
+- `auth_token`: Generates a valid JWT token for the `test_user` to test protected endpoints.
+
+### Covered Scenarios
+
+The tests are organized by feature into the following files:
+
+- **`tests/test_auth.py`**: Covers user registration, successful and failed logins, and access to protected user endpoints.
+- **`tests/test_tasks.py`**: Covers the creation of new tasks by an authenticated user.
+
 To start the FastAPI development server, run the following command:
 
 ```sh
