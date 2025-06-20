@@ -90,6 +90,17 @@ CybermaxTaskManager/
 
 ## Running the Application
 
+### Background Worker
+
+To run the periodic worker that checks for overdue tasks, execute the following command from the project root:
+
+```bash
+python -m app.workers.reminder
+```
+
+This script will run continuously, checking for overdue tasks every 30 seconds and logging reminders.
+
+
 To start the FastAPI development server, run the following command:
 
 ```sh
