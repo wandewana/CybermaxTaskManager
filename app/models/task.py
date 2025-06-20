@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
-from app.db.base import Base
+from app.models.base import Base
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -9,7 +9,7 @@ class Task(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True, nullable=False)
     description = Column(String, nullable=True)
-    due_date = Column(DateTime, nullable=True)
+    due_date = Column(DateTime(timezone=True), nullable=True)
     is_completed = Column(Boolean, default=False)
     owner_id = Column(Integer, ForeignKey("users.id"))
 

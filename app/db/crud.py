@@ -1,6 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from typing import List, Optional
+from datetime import datetime, timezone
 
 from app.models.user import User
 from app.models.task import Task
@@ -66,3 +68,17 @@ async def update_task(
 async def delete_task(db: AsyncSession, *, db_task: Task) -> None:
     await db.delete(db_task)
     await db.commit()
+
+
+async def get_overdue_tasks(db: AsyncSession) -> List[Task]:
+    """
+    Retrieves all tasks that are not completed and past their due date.
+    """
+    now = datetime.now(timezone.utc)
+    query = (
+        select(Task)
+        .options(selectinload(Task.owner))
+        .filter(Task.is_completed == False, Task.due_date < now)
+    )
+    result = await db.execute(query)
+    return result.scalars().all()
