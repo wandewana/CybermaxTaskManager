@@ -132,3 +132,33 @@ pytest -v
   $headers = @{ "Authorization" = "Bearer $token" }
   Invoke-WebRequest -Uri "http://localhost:8000/users/me" -Method GET -Headers $headers
   ```
+
+### Tasks
+
+All task endpoints require authentication. The examples below assume you have a valid `$token` and `$headers` variable as shown in the "Users" section.
+
+- **Create a new task:**
+  ```powershell
+  $taskBody = '{"title": "My New Task", "description": "A description for the task."}'
+  Invoke-WebRequest -Uri "http://localhost:8000/tasks/" -Method POST -Headers $headers -ContentType "application/json" -Body $taskBody
+  ```
+
+- **List tasks:**
+  ```powershell
+  # Get all tasks
+  Invoke-WebRequest -Uri "http://localhost:8000/tasks/" -Method GET -Headers $headers
+
+  # Get only incomplete tasks
+  Invoke-WebRequest -Uri "http://localhost:8000/tasks/?is_completed=false" -Method GET -Headers $headers
+  ```
+
+- **Update a task:**
+  ```powershell
+  $updateBody = '{"title": "Updated Task Title", "is_completed": true}'
+  Invoke-WebRequest -Uri "http://localhost:8000/tasks/{task_id}" -Method PUT -Headers $headers -ContentType "application/json" -Body $updateBody
+  ```
+
+- **Delete a task:**
+  ```powershell
+  Invoke-WebRequest -Uri "http://localhost:8000/tasks/{task_id}" -Method DELETE -Headers $headers
+  ```
