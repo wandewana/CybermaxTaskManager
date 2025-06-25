@@ -211,7 +211,7 @@ All task endpoints require authentication. The examples below assume you have a 
   Invoke-WebRequest -Uri "http://localhost:8000/tasks/{task_id}" -Method DELETE -Headers $headers
   ```
 
-  ## Using Swagger UI for API Testing and Authentication
+## Using Swagger UI for API Testing and Authentication
 
 The Cybermax Task Manager API provides an interactive Swagger UI for exploring and testing all endpoints.
 
