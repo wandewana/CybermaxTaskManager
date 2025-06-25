@@ -3,7 +3,7 @@ import pytest
 from typing import AsyncGenerator
 
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_scoped_session
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import text
 
@@ -17,9 +17,6 @@ from app.db import crud
 MAINTENANCE_DB_URL = "postgresql+asyncpg://user:password@localhost:5434/postgres"
 TEST_DB_NAME = "test_taskdb"
 TEST_DATABASE_URL = f"postgresql+asyncpg://user:password@localhost:5434/{TEST_DB_NAME}"
-
-engine = create_async_engine(TEST_DATABASE_URL)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
 # --- Fixtures ---
 
@@ -40,11 +37,13 @@ async def setup_database():
     await maintenance_engine.dispose()
 
     # Now, connect to the new test database and create tables
-    async with engine.begin() as conn:
+    test_engine = create_async_engine(TEST_DATABASE_URL)
+    async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    
+    await test_engine.dispose()
+
     yield # Run the tests
-    
+
     # After tests, drop the test database
     maintenance_engine = create_async_engine(MAINTENANCE_DB_URL, isolation_level="AUTOCOMMIT")
     async with maintenance_engine.connect() as conn:
@@ -52,37 +51,44 @@ async def setup_database():
     await maintenance_engine.dispose()
 
 @pytest.fixture(scope="function")
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Provide a transactional scope around a test function."""
-    async with TestingSessionLocal() as session:
-        yield session
+async def async_client() -> AsyncGenerator[AsyncClient, None]:
+    """Fixture for an async client that uses the test database with isolated sessions."""
+    engine = create_async_engine(TEST_DATABASE_URL)
+    async_session_factory = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
+    Session = async_scoped_session(async_session_factory, scopefunc=asyncio.current_task)
 
-@pytest.fixture(scope="function")
-async def async_client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """Fixture for an async client that uses the test database."""
     async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
-        yield db_session
+        async with Session() as session:
+            yield session
 
     app.dependency_overrides[get_db] = override_get_db
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
     del app.dependency_overrides[get_db]
+    await engine.dispose()
 
 
-@pytest.fixture(scope="function")
-async def test_user(db_session: AsyncSession):
-    """Create a test user in the database."""
-    user_in = UserCreate(email="testuser@example.com", password="password")
-    user = await crud.create_user(db=db_session, user_in=user_in)
-    return user
+import uuid
 
 @pytest.fixture(scope="function")
-async def auth_token(async_client: AsyncClient, test_user):
-    """Get an auth token for the test user."""
-    login_data = {
-        "username": test_user.email,
+async def test_user(async_client):
+    """Register a test user via the API with a unique email."""
+    unique_email = f"testuser_{uuid.uuid4().hex[:8]}@example.com"
+    user_data = {
+        "email": unique_email,
         "password": "password"
     }
-    response = await async_client.post("/auth/login", data=login_data)
+    response = await async_client.post("/auth/register", json=user_data)
+    assert response.status_code == 200
+    return response.json()
+
+@pytest.fixture(scope="function")
+async def auth_token(async_client, test_user):
+    """Get an auth token for the test user."""
+    login_data = {
+        "email": test_user["email"],
+        "password": "password"
+    }
+    response = await async_client.post("/auth/login", json=login_data)
     return response.json()["access_token"]
