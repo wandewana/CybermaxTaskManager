@@ -210,3 +210,38 @@ All task endpoints require authentication. The examples below assume you have a 
   ```powershell
   Invoke-WebRequest -Uri "http://localhost:8000/tasks/{task_id}" -Method DELETE -Headers $headers
   ```
+
+  ## Using Swagger UI for API Testing and Authentication
+
+The Cybermax Task Manager API provides an interactive Swagger UI for exploring and testing all endpoints.
+
+### Accessing Swagger UI
+
+- **Swagger UI URL:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Alternative (ReDoc):** [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+### Authentication Flow in Swagger UI
+
+1. **Obtain an Access Token**
+   - Use the `/auth/login` endpoint in Swagger by clicking "Try it out" and submitting your email and password as JSON:
+     ```json
+     {
+       "email": "your@email.com",
+       "password": "yourpassword"
+     }
+     ```
+   - Copy the `access_token` value from the response.
+
+2. **Authorize in Swagger UI**
+   - Click the **Authorize** button at the top right of the Swagger UI.
+   - Paste your access token (the JWT string) into the field. No `Bearer` prefix is needed.
+   - Click **Authorize**.
+   - All authenticated endpoints will now be unlocked for testing directly from the Swagger UI.
+
+3. **Making Authenticated Requests**
+   - After authorizing, you can use "Try it out" on any protected endpoint (e.g., `/tasks/`, `/users/me`) without manually setting headers.
+
+#### Notes
+- If your token expires, simply repeat the login flow to get a new one.
+
+---
