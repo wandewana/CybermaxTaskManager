@@ -10,14 +10,24 @@ from app.core.jwt import create_access_token, create_refresh_token
 router = APIRouter()
 
 
-@router.post("/register", response_model=User)
+from fastapi import status
+from fastapi.responses import JSONResponse
+
+@router.post(
+    "/register",
+    response_model=User,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new user",
+    description="Create a new user account. Returns the created user object.",
+    tags=["auth"]
+)
 async def register_user(
     *, 
     db: AsyncSession = Depends(deps.get_db), 
     user_in: UserCreate
 ) -> User:
     """
-    Create new user.
+    Create a new user account.
     """
     user = await crud.get_user_by_email(db, email=user_in.email)
     if user:
@@ -29,14 +39,21 @@ async def register_user(
     return user
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    response_model=dict,
+    status_code=status.HTTP_200_OK,
+    summary="Login and get tokens",
+    description="Authenticate user and return access/refresh tokens.",
+    tags=["auth"]
+)
 async def login(
     *, 
     db: AsyncSession = Depends(deps.get_db), 
     user_data: UserLogin
 ):
     """
-    Authenticate user and return tokens.
+    Authenticate user and return JWT tokens.
     """
     user = await crud.get_user_by_email(db, email=user_data.email)
     if not user or not verify_password(user_data.password, user.hashed_password):

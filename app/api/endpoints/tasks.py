@@ -10,7 +10,16 @@ from app.models.user import User
 router = APIRouter()
 
 
-@router.post("/", response_model=Task)
+from fastapi import status
+
+@router.post(
+    "/",
+    response_model=Task,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new task",
+    description="Create a new task for the current user.",
+    tags=["tasks"]
+)
 async def create_task(
     *, 
     db: AsyncSession = Depends(deps.get_db),
@@ -24,7 +33,14 @@ async def create_task(
     return task
 
 
-@router.get("/", response_model=List[Task])
+@router.get(
+    "/",
+    response_model=List[Task],
+    status_code=status.HTTP_200_OK,
+    summary="List tasks",
+    description="Retrieve all tasks for the current user. Optionally filter by completion status.",
+    tags=["tasks"]
+)
 async def read_tasks(
     db: AsyncSession = Depends(deps.get_db),
     is_completed: Optional[bool] = None,
@@ -39,7 +55,14 @@ async def read_tasks(
     return tasks
 
 
-@router.put("/{task_id}", response_model=Task)
+@router.put(
+    "/{task_id}",
+    response_model=Task,
+    status_code=status.HTTP_200_OK,
+    summary="Update a task",
+    description="Update a task by ID for the current user.",
+    tags=["tasks"]
+)
 async def update_task(
     *,
     db: AsyncSession = Depends(deps.get_db),
@@ -48,7 +71,7 @@ async def update_task(
     current_user: User = Depends(deps.get_current_user),
 ) -> Task:
     """
-    Update a task.
+    Update a task by ID for the current user.
     """
     db_task = await crud.get_task(db, id=task_id)
     if not db_task:
